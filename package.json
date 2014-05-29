@@ -1,0 +1,12 @@
+{
+  "name": "Gibber-Chat",
+  "version": "0.0.0",
+  "description": "Chat engine with client-side encryption",
+  "dependencies": {
+    "socket.io": "latest",
+    "express": "latest",
+    "jade": "latest",
+    "ejs": "~1.0.0"
+  },
+  "author": "renaud.caron"
+}
