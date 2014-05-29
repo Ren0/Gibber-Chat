@@ -1,5 +1,6 @@
 $(document).ready(function() {
 	var socket = io.connect(document.URL);
+	
 	socket.emit("join", "test", function(successful, users) {
 		console.log(successful);
 		console.log(users);
@@ -9,16 +10,19 @@ $(document).ready(function() {
 	var output = [];
 	$('#key').val('lapin')
 	$("#in").html(input.join("\n"));
+	var passphrase = $('#key').val();
 
 	// press enter in chat box: add plain text to input box, add encrypted text to output box
 	$('#chatInput').keypress(function(e) {
 		var message = $('#chatInput').val();
 		if(e.which == 13 && message != "") {
-			var passphrase = $('#key').val();
+			passphrase = $('#key').val();
 			
 			var encryptedMessage = CryptoJS.AES.encrypt(message, passphrase);
 			var decryptedMessage = CryptoJS.AES.decrypt(encryptedMessage, passphrase).toString(CryptoJS.enc.Latin1);
 						
+			
+			console.log("sending: " + encryptedMessage.toString());
 			socket.emit('send', { message: encryptedMessage.toString(), username: 'toto' });						
 						
 			output.push(encryptedMessage);
@@ -34,7 +38,7 @@ $(document).ready(function() {
 	// change the passphrase: rework all input box messages
 	$('#key').keyup(function(){
 		// test in browser: CryptoJS.AES.encrypt("t", "test").toString(); CryptoJS.AES.decrypt("U2FsdGVkX18+X7jWQL1ZVKAKk0TNks6qqvb8NTxeSJc=", "test").toString(CryptoJS.enc.Latin1);
-		var passphrase = $('#key').val();
+		passphrase = $('#key').val();
 		$("#in").html("");
 		for(var i=0; i<output.length; i++) {
 			input[i] = CryptoJS.AES.decrypt(output[i].toString(), passphrase).toString(CryptoJS.enc.Latin1);
@@ -44,6 +48,23 @@ $(document).ready(function() {
 		$("#out").html(output.join("\n"));
 	});
 	
-	// receive a message: TODO
+	// connected event
+	socket.on('connected', function (data) {
+		console.log(data.message);
+	});
+	
+	// receive a message
+	 socket.on('message', function (data) {
+		console.log("Received: " + data.message);
+		console.log("Received decrypted: " + CryptoJS.AES.decrypt(data.message, passphrase).toString(CryptoJS.enc.Latin1));
+		
+		output.push(data.message);
+		$("#out").html(output.join("\n"));
+		
+		input.push("Received: " + CryptoJS.AES.decrypt(data.message, passphrase).toString(CryptoJS.enc.Latin1));
+		$("#in").html(input.join("\n"));
+    });
+	
+	
 	
 });
