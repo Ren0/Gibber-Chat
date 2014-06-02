@@ -5,11 +5,6 @@ $(document).ready(function() {
 	var randomUsername = 'user_' + Math.floor(Math.random() * 20) + 1;
 	socket.emit('connected', { user: randomUsername, message: 'is joining the chat'});
 	
-	// when a new user joins the chat
-	socket.on('connected', function (data) {
-		console.log(data.user + ' - ' + data.message);
-	});
-
 	var input = []; // decrypted textarea
 	var output = []; // encrypted textarea
 	$("#in").html(input.join("\n"));
@@ -19,8 +14,13 @@ $(document).ready(function() {
 
 	// press enter in chat box: add plain text to input box, add encrypted text to output box
 	$('#chatInput').keypress(function(e) {
+		var keyCode = (event.which ? event.which : event.keyCode); 
 		var message = $('#chatInput').val();
-		if(e.which == 13 && message != "") {
+		
+		if ((keyCode == 10 || keyCode == 13) && event.ctrlKey) { // press ctrl + enter: line break
+			$('#chatInput').val($('#chatInput').val() + '&#013;&#010');
+		}
+		if(keyCode == 13 && message != "") { // press enter: send message
 			passphrase = $('#key').val();
 			
 			var encryptedMessage = CryptoJS.AES.encrypt(message, passphrase);
@@ -34,6 +34,8 @@ $(document).ready(function() {
 			$("#in").html(input.join("\n"));
 			
 			$('#chatInput').val('')
+			
+			scrollToBottom();
 		}
 	});
 	
@@ -47,14 +49,40 @@ $(document).ready(function() {
 		
 		$("#in").html(input.join("\n"));
 		$("#out").html(output.join("\n"));
+		
 	});
 	
 	// receive a message
-	socket.on('message', function (data) {	
+	socket.on('message', function (data) {
+		console.log(data);
 		output.push(data.message);
 		$("#out").html(output.join("\n"));
 		
 		input.push(data.user + ' - ' + CryptoJS.AES.decrypt(data.message, passphrase).toString(CryptoJS.enc.Latin1));
 		$("#in").html(input.join("\n"));
+		
+		scrollToBottom();
     });
+	
+	// when a new user joins the chat
+	socket.on('connected', function (data) {
+		console.log(data.user + ' - ' + data.message + ' - ' + data.users);
+		//output.push(data.user + ' ' + data.message);
+		//$("#out").html(output.join("\n"));	
+		input.push('*** ' + data.user + ' ' + data.message + ' ****');
+		$("#in").html(input.join("\n"));
+	});
+	
+	socket.on('disconnected', function (data) {
+		console.log(data.user + ' - ' + data.message + ' - ' + data.users);
+		//output.push(data.user + ' ' + data.message);
+		//$("#out").html(output.join("\n"));	
+		input.push('*** ' + data.user + ' ' + data.message + ' ****');
+		$("#in").html(input.join("\n"));
+	});
+	
+	scrollToBottom = function() {
+		$("#in").scrollTop($("#in")[0].scrollHeight - $("#in").height());
+		$("#out").scrollTop($("#out")[0].scrollHeight - $("#out").height());
+	}
 });
