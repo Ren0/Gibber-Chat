@@ -69,16 +69,16 @@ $(document).ready(function() {
 		console.log(data.user + ' - ' + data.message + ' - ' + data.users);
 		//output.push(data.user + ' ' + data.message);
 		//$("#out").html(output.join("\n"));	
-		input.push('*** ' + data.user + ' ' + data.message + ' ****');
-		$("#in").html(input.join("\n"));
+		//input.push('*** ' + data.user + ' ' + data.message + ' ****');
+		//$("#in").html(input.join("\n"));
 	});
 	
 	socket.on('disconnected', function (data) {
 		console.log(data.user + ' - ' + data.message + ' - ' + data.users);
 		//output.push(data.user + ' ' + data.message);
 		//$("#out").html(output.join("\n"));	
-		input.push('*** ' + data.user + ' ' + data.message + ' ****');
-		$("#in").html(input.join("\n"));
+		//input.push('*** ' + data.user + ' ' + data.message + ' ****');
+		//$("#in").html(input.join("\n"));
 	});
 	
 	scrollToBottom = function() {

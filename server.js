@@ -14,9 +14,9 @@ var io = require('socket.io').listen(app.listen(port));
 var allUsers = [];
 io.sockets.on('connection', function (user) {
 	allUsers.push(user.id);
-	user.emit(user.id);
+	//user.emit(user.id);
 	
-	user.broadcast.emit('connected', {user: user.id, message: ' has joined the chat', users: allUsers});
+	//user.broadcast.emit('connected', {user: user.id, message: ' has joined the chat', users: allUsers});
 	
 	user.on('connected', function (data) {
 		user.emit('connected', {user: user.id, message: ' has joined the chat', users: allUsers});
@@ -40,7 +40,7 @@ io.sockets.on('connection', function (user) {
 // generate random bots sending random messages on a random interval
 var botsJob;
 var randomChat = function () {
-	var randomInterval = Math.floor(Math.random() * 1000) + 1;
+	var randomInterval = Math.floor(Math.random() * 5000) + 1;
 	io.sockets.emit('message', bot.randomMessage());
 	botsJob = setTimeout(randomChat, randomInterval);
 }
