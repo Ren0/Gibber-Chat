@@ -1,9 +1,8 @@
 $(document).ready(function() {
 	var socket = io.connect(document.URL);
 	
-	// on refresh: create a new anonymous user and notice everyone
-	var randomUsername = 'user_' + Math.floor(Math.random() * 20) + 1;
-	socket.emit('connected', { user: randomUsername, message: 'is joining the chat'});
+	var username = '';
+	//socket.emit('notifyConnected', { user: username, message: 'is joining the chat'});
 	
 	var input = []; // decrypted textarea
 	var output = []; // encrypted textarea
@@ -14,10 +13,10 @@ $(document).ready(function() {
 
 	// press enter in chat box: add plain text to input box, add encrypted text to output box
 	$('#chatInput').keypress(function(e) {
-		var keyCode = (event.which ? event.which : event.keyCode); 
+		var keyCode = (e.which ? e.which : e.keyCode); 
 		var message = $('#chatInput').val();
 		
-		if ((keyCode == 10 || keyCode == 13) && event.ctrlKey) { // press ctrl + enter: line break
+		if ((keyCode == 10 || keyCode == 13) && e.ctrlKey) { // press ctrl + enter: line break
 			$('#chatInput').val($('#chatInput').val() + '&#013;&#010');
 		}
 		if(keyCode == 13 && message != "") { // press enter: send message
@@ -26,11 +25,11 @@ $(document).ready(function() {
 			var encryptedMessage = CryptoJS.AES.encrypt(message, passphrase);
 			var decryptedMessage = CryptoJS.AES.decrypt(encryptedMessage, passphrase).toString(CryptoJS.enc.Latin1);
 						
-			socket.emit('send', { user: randomUsername, message: encryptedMessage.toString()});
+			socket.emit('send', { user: username, message: encryptedMessage.toString()});
 						
 			output.push(encryptedMessage);
 			$("#out").html(output.join("\n"));	
-			input.push(randomUsername + ' - ' + decryptedMessage);
+			input.push(username + ' - ' + decryptedMessage);
 			$("#in").html(input.join("\n"));
 			
 			$('#chatInput').val('')
@@ -64,21 +63,30 @@ $(document).ready(function() {
 		scrollToBottom();
     });
 	
+	
+	socket.on('assign', function (data) {
+		console.log('assigned userId: ' + data.user);
+		username = data.user;
+		$("#username").html(data.user);
+	});
+	
 	// when a new user joins the chat
 	socket.on('connected', function (data) {
 		console.log(data.user + ' - ' + data.message + ' - ' + data.users);
+		//var isYou = data.user == username;
 		//output.push(data.user + ' ' + data.message);
 		//$("#out").html(output.join("\n"));	
-		//input.push('*** ' + data.user + ' ' + data.message + ' ****');
-		//$("#in").html(input.join("\n"));
+		input.push('*** ' + data.user + ' ' + (isYou ? '(you)' : '') + ' ' + data.message + ' ****');
+		$("#in").html(input.join("\n"));
 	});
 	
-	socket.on('disconnected', function (data) {
+	// when a new user leaves the chat
+	socket.on('notifyDisconnected', function (data) {
 		console.log(data.user + ' - ' + data.message + ' - ' + data.users);
 		//output.push(data.user + ' ' + data.message);
 		//$("#out").html(output.join("\n"));	
-		//input.push('*** ' + data.user + ' ' + data.message + ' ****');
-		//$("#in").html(input.join("\n"));
+		input.push('*** ' + data.user + ' ' + data.message + ' ****');
+		$("#in").html(input.join("\n"));
 	});
 	
 	scrollToBottom = function() {

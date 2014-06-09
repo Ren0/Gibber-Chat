@@ -6,29 +6,29 @@ var port = 3700;
 
 app.set('views', __dirname + '/views');
 app.engine('html', require('ejs').renderFile);
-
 app.use(express.static(__dirname + '/public')); 
 
 var io = require('socket.io').listen(app.listen(port));
 
+var randomUsername = '';
 var allUsers = [];
 io.sockets.on('connection', function (user) {
-	allUsers.push(user.id);
-	//user.emit(user.id);
+	var x = Math.floor(Math.random() * 98) + 1;
+	randomUsername = 'user_' + x;
+	allUsers.push({id: user.id, name: randomUsername});
+	console.log('XXX - ' + JSON.stringify(allUsers));
+		
+	user.emit('assign', {user: randomUsername, message: 'assignn'});
 	
-	//user.broadcast.emit('connected', {user: user.id, message: ' has joined the chat', users: allUsers});
+	// not needed: handled by io.sockets.on('connection',   ?
+	//user.on('notifyConnected', function (data) {
+		//console.log('CONNECTED - ' + JSON.stringify(allUsers));
+	//});
 	
-	user.on('connected', function (data) {
-		user.emit('connected', {user: user.id, message: ' has joined the chat', users: allUsers});
-		console.log(allUsers);
-	});
-	
-	 user.on('disconnect', function (e) {
+	 user.on('disconnect', function (data) {
 		var userId = user.id;
 		allUsers.splice(allUsers.indexOf(userId), 1);
-		user.broadcast.emit('disconnected', {user: userId, message: ' has left the chat', users: allUsers});
-		console.log(allUsers);
-        //io.sockets.emit('count', {number: count});
+		console.log('DISCONNECTED -' + JSON.stringify(allUsers));
     });
 
 	// new message: broadcast it to all other users (excluding self)
